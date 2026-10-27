@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Staff Certification Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#1b2340; --muted:#5d6785; --line:#dde2ee;
+  --accent:#2b3f9e; --ok:#1f8a5b; --warn:#d99a1c; --bad:#c62f3d; --none:#eef0f6;
+  --shadow:0 1px 2px rgba(27,35,64,.06);
+  --head:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1424; --surface:#171d33; --ink:#e8ebf6; --muted:#9aa3c2; --line:#2a3251;
+    --accent:#8ea2ff; --ok:#3fc08a; --warn:#f0b840; --bad:#ef5b69; --none:#20284274; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1424; --surface:#171d33; --ink:#e8ebf6; --muted:#9aa3c2; --line:#2a3251;
+  --accent:#8ea2ff; --ok:#3fc08a; --warn:#f0b840; --bad:#ef5b69; --none:#20284274; --shadow:none;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body);min-height:100%}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 18px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+h1{font:700 30px/1.1 var(--head);margin:0 0 4px;letter-spacing:-.01em}
+h2{font:600 18px/1.2 var(--head);margin:0}
+.sub{color:var(--muted);margin:0;font-size:14px}
+.asof{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+input,select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+input:focus-visible,select:focus-visible,button:focus-visible,tr[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}
+.kpi b{display:block;font:700 26px/1.1 var(--head)}
+.kpi span{color:var(--muted);font-size:13px}
+.kpi.bad b{color:var(--bad)} .kpi.warn b{color:var(--warn)}
+.grid{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:18px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+.panel + .panel{margin-top:18px}
+.lookup label{display:block;font-weight:600;margin-bottom:6px;font-size:14px}
+.lookup select{width:100%}
+.person{margin-top:16px}
+.person h3{font:700 22px/1.2 var(--head);margin:0}
+.person .role{color:var(--muted);margin:2px 0 10px;font-size:14px}
+dl.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0 0 14px;font-size:14px}
+dl.facts dt{color:var(--muted)} dl.facts dd{margin:0;font-weight:500}
+.banner{border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:14px;border:1px solid}
+.banner.ok{background:color-mix(in srgb,var(--ok) 12%,var(--surface));border-color:color-mix(in srgb,var(--ok) 45%,var(--surface))}
+.banner.warn{background:color-mix(in srgb,var(--warn) 14%,var(--surface));border-color:color-mix(in srgb,var(--warn) 50%,var(--surface))}
+.banner.bad{background:color-mix(in srgb,var(--bad) 12%,var(--surface));border-color:color-mix(in srgb,var(--bad) 50%,var(--surface))}
+.banner.neutral{background:var(--none);border-color:var(--line);color:var(--muted)}
+td.cell.exempt{background:var(--none);color:var(--muted);font-weight:500}
+.certs{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.certs li{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+.certs .mark{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;flex:none;background:var(--none);color:var(--muted)}
+.certs li.has{background:color-mix(in srgb,var(--ok) 9%,var(--surface))}
+.certs li.has .mark{background:var(--ok);color:#fff}
+.certs li.miss-bad .mark{background:var(--bad);color:#fff}
+.certs li.miss-warn .mark{background:var(--warn);color:#1b2340}
+.certs .note{margin-left:auto;color:var(--muted);font-size:12.5px;text-align:right}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 13px var(--body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{color:#0f1424}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#0f1424}}
+.tools .spacer{flex:1}
+.legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:10px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+.scale{width:90px;height:12px;border-radius:3px;display:inline-block;vertical-align:-2px;margin:0 5px;background:linear-gradient(90deg,color-mix(in srgb,var(--bad) 30%,var(--surface)),var(--bad))}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;max-height:640px;overflow-y:auto}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:640px;font-size:13.5px}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface);z-index:1;font-weight:600;color:var(--muted);font-size:13px}
+tbody tr{cursor:pointer}
+tbody tr:hover td.n{text-decoration:underline}
+tbody tr.sel td{box-shadow:inset 0 0 0 9999px color-mix(in srgb,var(--accent) 10%,transparent)}
+td.n{font-weight:500;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+td.cell{text-align:center;font-weight:600;font-size:12.5px;min-width:96px;border-left:1px solid var(--surface);border-right:1px solid var(--surface)}
+td.cell.ok{background:color-mix(in srgb,var(--ok) 22%,var(--surface));color:var(--ok)}
+td.cell.pending{background:color-mix(in srgb,var(--warn) 30%,var(--surface))}
+td.cell.overdue{color:#fff}
+.empty{padding:22px;text-align:center;color:var(--muted)}
+.dept td.cell{min-width:110px}
+.foot{margin-top:18px;color:var(--muted);font-size:13px;max-width:80ch}
+.foot p{margin:0 0 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Staff certification dashboard</h1>
+      <p class="sub" id="source"></p>
+    </div>
+    <label class="asof">Count days up to
+      <input type="date" id="asof" aria-label="Date to count employment days up to">
+    </label>
+  </header>
+
+  <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+  <div class="grid">
+    <aside>
+      <section class="panel lookup" aria-labelledby="lk">
+        <h2 id="lk">Look up a staff member</h2>
+        <p class="sub" style="margin:4px 0 12px">Choose a name to see every certification they hold.</p>
+        <label for="staff">Staff</label>
+        <select id="staff"></select>
+        <div class="person" id="person"></div>
+      </section>
+    </aside>
+
+    <main>
+      <section class="panel" aria-labelledby="hm">
+        <h2 id="hm">Google L1 and Apple: 2-year heatmap</h2>
+        <p class="sub" style="margin:4px 0 0">Each row is one staff member. Select a row to open their certifications.</p>
+        <div class="tools" id="filters" role="group" aria-label="Filter staff">
+          <button class="chip" data-f="flagged" aria-pressed="true">Flagged only</button>
+          <button class="chip" data-f="all" aria-pressed="false">All staff</button>
+          <button class="chip" data-f="overdue" aria-pressed="false">Past 2 years</button>
+          <button class="chip" data-f="pending" aria-pressed="false">Within 2 years</button>
+          <span class="spacer"></span>
+          <select id="dept" aria-label="Filter by department"></select>
+        </div>
+        <div class="legend">
+          <span><i style="background:color-mix(in srgb,var(--ok) 22%,var(--surface))"></i>Attained</span>
+          <span><i style="background:color-mix(in srgb,var(--warn) 30%,var(--surface))"></i>Not yet, still inside 2 years</span>
+          <span>Not attained after 2 years<span class="scale"></span>longer overdue is darker</span>
+          <span><i style="background:var(--none);border:1px solid var(--line)"></i>Exempt (different employment status)</span>
+        </div>
+        <div class="tablewrap">
+          <table id="heat">
+            <thead><tr><th>Staff</th><th>Department</th><th style="text-align:right">Hired</th><th style="text-align:right">Days employed</th><th style="text-align:center">Google L1</th><th style="text-align:center">Apple</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel dept" aria-labelledby="dp">
+        <h2 id="dp">By department</h2>
+        <p class="sub" style="margin:4px 0 12px">Share of staff holding each certification. Only staff employed over 2 years are counted; exempt staff and anyone under 2 years are left out. Redder means a larger gap.</p>
+        <div class="tablewrap"><table id="deptTable" style="min-width:520px">
+          <thead><tr><th>Department</th><th style="text-align:right">Staff</th><th style="text-align:center">Google L1</th><th style="text-align:center">Apple</th><th style="text-align:right">Past 2 years</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+/* Snapshot of the "2026" tab (last updated 3 January 2026), active staff only.
+   Fields: name | department | designation | hire date | flags
+   Flags in order: Google L1, Apple, Google Certified Innovator, Apple Distinguished Educator, Gemini Trainer */
+const RAW = `Nur Johari Bin Salleh|Mathematics|Teacher|1-Jan-2009|11000
+Yeo Jien Yoen Aurelius|Information & Communications Technology|Dean, Educational Technology|1-Jan-2010|11111
+Teo Soo Ling Karen|Science|Subject Head|28-Dec-2010|11000
+Tan Jee Kok Seth|Humanities|Teacher|1-Jan-2011|11000
+Tan Yoke Leng Doreen|Mathematics|Dean, Student Development|1-Jan-2011|11000
+Soh Wee Peng|Art, Design, Media & Technology|Head of Department|1-Jan-2011|11101
+Tan Cheow Yiong Jerome|Sports and Wellness|Teacher|2-Jun-2011|11000
+Tan Hoe Teck|Science|Chief Specialist, Applied Research|21-Jun-2011|11010
+Choo Mui Luan|Sports and Wellness|Subject Head|27-Jun-2011|11000
+Lee Lin Lin Camellia|Sports and Wellness|Year Head|27-Dec-2011|11000
+Azizah Bte Ahmad|Mother Tongue|Teacher|1-Jan-2012|11000
+Yap Hui Min|Mother Tongue|Subject Head|1-Jan-2012|11000
+Ng Yi Ting Karen|Science|Head of Department|1-Jan-2012|11000
+Ng Guohui Nigel|Science|Subject Head|19-Jun-2012|11000
+Oh Chiew Ting Rachel|English|Teacher|21-Aug-2012|11000
+Tan Ruihao Alvin|Humanities|Teacher|1-Jan-2013|11000
+Tan Sook Qin|Mother Tongue|Teacher|1-Jan-2013|11000
+Yap Yee Ying|Mother Tongue|Teacher|1-Jan-2013|11000
+Wong Ho Yan|Mother Tongue|Teacher|1-Jan-2013|11000
+Lim Shu-En Adele|Sports and Wellness|Subject Head|1-Jan-2013|11001
+Praveena D/O Sandra Mohan|Science|Senior Teacher|1-Jan-2013|11000
+Lim Ming Yang|Science|Teacher|1-Jan-2013|11000
+Chua Chun Min Jonathan|Information & Communications Technology|Lead Specialist|1-Jun-2013|00001
+Lam Lai Hwa Christine|English|Teacher|26-Jun-2013|11000
+Goh Kaw Sen Karlson|English|Senior Teacher|26-Jun-2013|11001
+Wee Kheng Leong Keith|Mathematics|Subject Head, Active Citizenship Education|1-Jul-2013|11000
+Liu Yi Jie|Mathematics|Senior Specialist (Educational Technology)|1-Jan-2014|11101
+Tan Chuan Leong|Mother Tongue|Level Head|1-Jan-2014|11000
+Tan Sai Keng Janet|Mathematics|Subject Head, Organisational Partnership|2-Apr-2014|11000
+Loh Kwai Yin|Mathematics|Head of Department|1-Jan-2015|11111
+Lam Hin Chew|Sports and Wellness|Senior Teacher|1-Jan-2015|11000
+Leong Woon Foong|Science|Head of Department|1-Jan-2015|11000
+Ng Seen Leng Patricia|Art, Design, Media & Technology|Teacher|1-Apr-2015|00000
+Mohamed Irfan Bin Darian|Art, Design, Media & Technology|Deputy Dean, Applied Design|1-Jun-2015|11011
+Yeo Sok Hui|Mother Tongue|Senior Teacher|1-Jul-2015|11000
+Mohammad Noor Mohamed Hussein|English|Teacher|28-Dec-2015|11000
+Lim Shiao Yu Alice|Humanities|Senior Teacher|1-Jan-2016|11000
+Lim Suet Ching Megan|English|Teacher|28-Dec-2016|11001
+Pang Hee Tee Robin|Information & Communications Technology|Senior Specialist|27-Dec-2017|00000
+Ting Wei Ling Jaslyn|English|Head of Department (Acting)|16-Jul-2018|11000
+Chng Soon Hsien Raymond|Mathematics|Teacher|26-Dec-2018|11000
+Arfah Binte Buang|Mother Tongue|Deputy Dean, Learning and Development|1-Jan-2019|11111
+Paik Xin Yi Merlene|Science|Assistant Year Head|18-Mar-2019|11000
+Ng Jun Wei|Sports and Wellness|Head of Department|1-Sep-2025|11000
+Nurul Afiah Binte Abdul Rashid|English|Assistant Year Head|19-Aug-2019|11000
+Velayutham Jeyakumaran|Mother Tongue|Teacher|7-Jan-2020|00000
+Chok Yong Hui John|English|Teacher|6-Apr-2020|11000
+Tan Sixuan Esther|Humanities|Teacher|2-Jun-2020|11000
+Deana Syazwani Binte Azman|Mathematics|Subject Head (Acting)|29-Jun-2020|11000
+Abdull Samath Bin Nagore Meerah|Mother Tongue|Teacher|28-Dec-2020|00000
+Lim Chuay Sia|Science|Senior Teacher|1-Jan-2021|11000
+Tan Soo Woon John|Science|Dean, Integrated Diploma Programme|1-Jan-2021|11000
+Tan Yiren Ivan|Mathematics|Teacher|1-Jan-2021|11000
+Nurus Sa'adah Binte Hatraby|English|Teacher|1-Jan-2021|11000
+Szeto Dee Loon Dillon|Science|Teacher|15-Mar-2021|11000
+Chia Song Zhe Andy|Mathematics|Teacher|21-Jun-2021|11000
+Ong Jie Ying|Science|Teacher|28-Jun-2021|11000
+Seah Wei Kang Don|Humanities|Subject Head|28-Jun-2021|11001
+Ng Li-Ping|Science|Teacher|1-Jan-2022|11000
+Lee Pei Pei Priscilla|Mathematics|Dean, Academic Studies|1-Jan-2022|11000
+Tan Kai Chin|Sports and Wellness|Teacher|1-Jan-2022|11000
+Teo Wei Ting|Science|Teacher|1-Jan-2022|11001
+Wong Koi Lin|Science|Teacher|14-Mar-2022|11000
+Wong Lai Fong|Mathematics|Teacher|1-May-2022|11000
+Dong Zilei|Mathematics|Teacher|22-Jun-2022|11000
+Tan Hui En Debbie|English|Teacher|22-Jun-2022|11000
+Ow Chee Kwong Dominic|Humanities|Teacher|27-Dec-2022|11001
+Zhang Jiaxin Genevieve|Humanities|Head of Department|1-Jan-2023|11000
+Tang Wen Qi Jovita|Information & Communications Technology|Subject Head|1-Jan-2023|11111
+Chee Meng Teck|Science|Lead Specialist, Electronics & Engineering|1-Jan-2023|11000
+Goh Su Huei|Mother Tongue Languages|Teacher|1-Jan-2023|11000
+Ng Hui Min|ADMT|Teacher|1-Jan-2023|11000
+Loh Yue Yan Amelia|Science|Subject Head|1-Jan-2023|11000
+Choo Hui En|Science|Subject Head|1-Jan-2023|11001
+Xu Wei|Mother Tongue Languages|Teacher|1-Jan-2023|11000
+Foo Hao Ling|Mathematics|Teacher|1-Jan-2023|11000
+Low Zu You Allan|Science|Teacher|13-Mar-2023|11000
+Mohammad Firdaus Bin Sulaiman|Humanities|Teacher|13-Mar-2023|11000
+Chan Yong Hong|Humanities|Teacher|19-Jun-2023|11001
+Liew Sui Qiong|Mother Tongue Languages|Teacher|27-Dec-2023|11000
+Sim Yong Seng Stanley|Informatics|Teacher|27-Dec-2023|11011
+Liao Yin Mei Carine|English Language|Teacher|27-Dec-2023|11001
+Wong Lu Ting|Mother Tongue Languages|Head of Department|1-Jan-2024|11000
+Tan Tong Lun Jason|Science|Teacher|1-Jan-2024|11000
+Wan Han Xuan Thomas|Science|Teacher|1-Jan-2024|11001
+Seah Swee Kheng Pamela|Mathematics|Teacher|1-Jan-2024|11000
+Wang Wade Fengyin|Sports and Wellness|Teacher|24-Jun-2024|11001
+Lim Yi Wen|Science|Subject Head|1-Jan-2025|11000
+Mao Chamnap|Science|Teacher|1-Jan-2025|11000
+Zeng Wei|Science|Teacher|1-Jan-2025|11001
+Ang Meng Li|Mother Tongue Languages|Teacher|1-Jan-2025|11000
+Wong Yoke Chee Jamie|Mathematics|Head of Department|1-Jan-2025|10001
+Go Yong Siang Christopher|Sports and Wellness|Teacher|23-Jun-2025|11000
+Tang Kang Yu Nicholas|Sports and Wellness|Teacher|23-Jun-2025|11000
+Ng Soo Ling|Mathematics|Teacher|2-Jan-2026|00000
+A Fathima Beevi|Mother Tongue|Practicum Teacher|5-Jan-2026|00000`;
+
+const LIMIT = 730;
+const CERTS = [
+  {k:0, label:"Google L1", key:true},
+  {k:1, label:"Apple Teacher", key:true},
+  {k:2, label:"Google Certified Innovator"},
+  {k:3, label:"Apple Distinguished Educator"},
+  {k:"sls1", label:"SLS 1"},
+  {k:"sls2", label:"SLS 2"},
+  {k:4, label:"Gemini Trainer"}
+];
+const MON = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+const DAY = 86400000;
+const parseD = s => { const [d,m,y]=s.split("-"); return Date.UTC(+y, MON[m], +d); };
+const fmtD = t => new Date(t).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"});
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const STAFF = RAW.split("\n").map(l => {
+  const [name,dept,desig,hire,fl] = l.split("|");
+  const f = fl.split("").map(x => x === "1");
+  return {name, dept, desig, hire, hireT: parseD(hire), has:{0:f[0],1:f[1],2:f[2],3:f[3],4:f[4],sls1:false,sls2:false}};
+}).sort((a,b)=>a.name.localeCompare(b.name));
+
+/* Different employment status: shown in the dashboard but left out of every total, flag and percentage */
+const EXEMPT = new Set(["Chua Chun Min Jonathan","Ng Seen Leng Patricia","Pang Hee Tee Robin","Velayutham Jeyakumaran","Abdull Samath Bin Nagore Meerah"]);
+STAFF.forEach(p => { p.exempt = EXEMPT.has(p.name); });
+
+const $ = id => document.getElementById(id);
+const state = {filter:"flagged", dept:"", asOf:0, sel:""};
+
+function todayUTC(){ const n=new Date(); return Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()); }
+
+/* status of a key certification for a person */
+function status(p, k){
+  if (p.exempt) return {s:"exempt"};
+  if (p.has[k]) return {s:"ok"};
+  const days = Math.floor((state.asOf - p.hireT)/DAY);
+  if (days >= LIMIT) return {s:"overdue", over: days-LIMIT, days};
+  return {s:"pending", left: LIMIT-days, days};
+}
+const days = p => Math.floor((state.asOf - p.hireT)/DAY);
+const nf = n => n.toLocaleString("en-GB");
+
+function overdueColor(over){
+  const pct = 38 + Math.round(62*Math.min(1, over/2500));
+  return `background:color-mix(in srgb,var(--bad) ${pct}%,var(--surface));color:${pct>60?"#fff":"var(--ink)"}`;
+}
+function pctColor(p){ // p = 0..1 share attained
+  if (p >= 0.98) return "background:color-mix(in srgb,var(--ok) 22%,var(--surface));color:var(--ok)";
+  const gap = Math.min(1,(1-p)/0.4);
+  const pct = 22 + Math.round(60*gap);
+  return `background:color-mix(in srgb,var(--bad) ${pct}%,var(--surface));color:${pct>58?"#fff":"var(--ink)"}`;
+}
+
+function inBase(p){ return !p.exempt && days(p) >= LIMIT; } // counted in percentages: employed 2+ years, not exempt
+
+function renderKpis(){
+  const base = STAFF.filter(inBase);
+  const n = base.length;
+  const ex = STAFF.filter(p=>p.exempt).length;
+  const young = STAFF.filter(p=>!p.exempt && !inBase(p)).length;
+  const g = base.filter(p=>p.has[0]).length, a = base.filter(p=>p.has[1]).length;
+  let od = 0, pend = 0;
+  STAFF.forEach(p => {
+    const sg = status(p,0).s, sa = status(p,1).s;
+    if (sg==="overdue"||sa==="overdue") od++;
+    else if (sg==="pending"||sa==="pending") pend++;
+  });
+  $("kpis").innerHTML = `
+    <div class="kpi"><b>${n}</b><span>Staff employed over 2 years (${young} under 2 years and ${ex} exempt not counted)</span></div>
+    <div class="kpi"><b>${n?Math.round(g/n*100):0}%</b><span>Hold Google L1 (${g} of ${n})</span></div>
+    <div class="kpi"><b>${n?Math.round(a/n*100):0}%</b><span>Hold Apple Teacher (${a} of ${n})</span></div>
+    <div class="kpi bad"><b>${od}</b><span>Missing L1 or Apple past 2 years</span></div>
+    <div class="kpi warn"><b>${pend}</b><span>Missing one, still inside 2 years</span></div>`;
+}
+
+function renderPerson(){
+  const box = $("person");
+  const p = STAFF.find(x=>x.name===state.sel);
+  if (!p){ box.innerHTML = `<div class="empty">Select a name above.</div>`; return; }
+  const d = days(p);
+  const sg = status(p,0), sa = status(p,1);
+  const bad = [["Google L1",sg],["Apple Teacher",sa]].filter(x=>x[1].s==="overdue");
+  const warn = [["Google L1",sg],["Apple Teacher",sa]].filter(x=>x[1].s==="pending");
+  let banner;
+  if (p.exempt) banner = `<div class="banner neutral">Exempt from certification totals because of a different employment status.</div>`;
+  else if (bad.length) banner = `<div class="banner bad"><b>Flagged.</b> ${bad.map(x=>x[0]).join(" and ")} not attained ${bad.length>1?"":"("}${nf(bad[0][1].over)} days past the 2-year mark${bad.length>1?"":")"}.</div>`;
+  else if (warn.length) banner = `<div class="banner warn">${warn.map(x=>x[0]).join(" and ")} still to attain. ${nf(Math.min(...warn.map(x=>x[1].left)))} days left inside the 2-year window.</div>`;
+  else banner = `<div class="banner ok">Google L1 and Apple Teacher both attained.</div>`;
+  const held = CERTS.filter(c=>p.has[c.k]).length;
+  const items = CERTS.map(c=>{
+    const has = p.has[c.k];
+    let cls="", mark="–", note="Not attained";
+    if (has){ cls="has"; mark="✓"; note="Attained"; }
+    else if (p.exempt && c.key){ note="Exempt"; }
+    else if (c.key){
+      const st = status(p,c.k);
+      if (st.s==="overdue"){ cls="miss-bad"; mark="!"; note=`${nf(st.over)} days overdue`; }
+      else { cls="miss-warn"; mark="…"; note=`${nf(st.left)} days left`; }
+    }
+    return `<li class="${cls}"><span class="mark" aria-hidden="true">${mark}</span><span>${esc(c.label)}</span><span class="note">${note}</span></li>`;
+  }).join("");
+  box.innerHTML = `
+    <h3>${esc(p.name)}</h3>
+    <p class="role">${esc(p.desig)}</p>
+    <dl class="facts">
+      <dt>Department</dt><dd>${esc(p.dept)}</dd>
+      <dt>Hired</dt><dd>${fmtD(p.hireT)}</dd>
+      <dt>Days employed</dt><dd>${nf(d)}</dd>
+      <dt>Certifications</dt><dd>${held} of ${CERTS.length}</dd>
+    </dl>
+    ${banner}
+    <ul class="certs">${items}</ul>`;
+}
+
+function rowsForHeat(){
+  let rows = STAFF.map(p=>({p, g:status(p,0), a:status(p,1)}));
+  if (state.dept) rows = rows.filter(r=>r.p.dept===state.dept);
+  const isOver = r => r.g.s==="overdue"||r.a.s==="overdue";
+  const isPend = r => !isOver(r) && (r.g.s==="pending"||r.a.s==="pending");
+  if (state.filter==="flagged") rows = rows.filter(r=>isOver(r)||isPend(r));
+  if (state.filter==="overdue") rows = rows.filter(isOver);
+  if (state.filter==="pending") rows = rows.filter(isPend);
+  const sev = r => (isOver(r)?1000000:0) + (isPend(r)?500000:0) + days(r.p);
+  rows.sort((x,y)=>sev(y)-sev(x) || x.p.name.localeCompare(y.p.name));
+  return rows;
+}
+function cell(st){
+  if (st.s==="exempt") return `<td class="cell exempt">Exempt</td>`;
+  if (st.s==="ok") return `<td class="cell ok">✓ Attained</td>`;
+  if (st.s==="pending") return `<td class="cell pending">${nf(st.left)}d left</td>`;
+  return `<td class="cell overdue" style="${overdueColor(st.over)}">+${nf(st.over)}d over</td>`;
+}
+function renderHeat(){
+  const rows = rowsForHeat();
+  const tb = document.querySelector("#heat tbody");
+  if (!rows.length){ tb.innerHTML = `<tr><td colspan="6" class="empty">No staff match this filter.</td></tr>`; return; }
+  tb.innerHTML = rows.map(r=>`
+    <tr tabindex="0" data-name="${esc(r.p.name)}" class="${r.p.name===state.sel?"sel":""}">
+      <td class="n" title="${esc(r.p.name)}">${esc(r.p.name)}</td>
+      <td>${esc(r.p.dept)}</td>
+      <td class="num">${fmtD(r.p.hireT)}</td>
+      <td class="num">${nf(days(r.p))}</td>
+      ${cell(r.g)}${cell(r.a)}
+    </tr>`).join("");
+}
+function renderDept(){
+  const by = {};
+  STAFF.filter(inBase).forEach(p=>{ (by[p.dept] ||= []).push(p); });
+  const rows = Object.entries(by).map(([d,list])=>{
+    const pct = k => list.filter(p=>p.has[k]).length/list.length;
+    const g = pct(0), a = pct(1);
+    const od = list.filter(p=>status(p,0).s==="overdue"||status(p,1).s==="overdue").length;
+    return {d, n:list.length, g, a, od};
+  }).sort((x,y)=>y.od-x.od || ((x.g??1)+(x.a??1))-((y.g??1)+(y.a??1)));
+  const pc = v => v===null ? `<td class="cell">n/a</td>` : `<td class="cell" style="${pctColor(v)}">${Math.round(v*100)}%</td>`;
+  document.querySelector("#deptTable tbody").innerHTML = rows.map(r=>`
+    <tr><td>${esc(r.d)}</td><td class="num">${r.n}</td>
+    ${pc(r.g)}${pc(r.a)}
+    <td class="num">${r.od}</td></tr>`).join("");
+}
+
+function selectStaff(name, scroll){
+  state.sel = name;
+  $("staff").value = name;
+  renderPerson(); renderHeat();
+  if (scroll) $("staff").scrollIntoView({behavior:"smooth", block:"center"});
+}
+function renderAll(){ renderKpis(); renderPerson(); renderHeat(); renderDept(); }
+
+function init(){
+  $("source").textContent = `Source: "2026" tab of your Google Sheet, last updated 3 January 2026. ${STAFF.length} active staff on the sheet.`;
+  $("staff").innerHTML = `<option value="">Select a staff member</option>` + STAFF.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("");
+  const depts = [...new Set(STAFF.map(p=>p.dept))].sort();
+  $("dept").innerHTML = `<option value="">All departments</option>` + depts.map(d=>`<option>${esc(d)}</option>`).join("");
+  state.asOf = todayUTC();
+  $("asof").value = new Date(state.asOf).toISOString().slice(0,10);
+  $("asof").addEventListener("change", e => { const v=e.target.value; if(v){ const [y,m,d]=v.split("-"); state.asOf = Date.UTC(+y,+m-1,+d); renderAll(); }});
+  $("staff").addEventListener("change", e => { state.sel=e.target.value; renderPerson(); renderHeat(); });
+  $("dept").addEventListener("change", e => { state.dept=e.target.value; renderHeat(); });
+  $("filters").addEventListener("click", e => {
+    const b = e.target.closest(".chip"); if(!b) return;
+    state.filter = b.dataset.f;
+    document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed", c===b));
+    renderHeat();
+  });
+  const tb = document.querySelector("#heat tbody");
+  tb.addEventListener("click", e => { const tr=e.target.closest("tr[data-name]"); if(tr) selectStaff(tr.dataset.name, window.innerWidth<=900); });
+  tb.addEventListener("keydown", e => { if((e.key==="Enter"||e.key===" ") && e.target.matches("tr[data-name]")){ e.preventDefault(); selectStaff(e.target.dataset.name, window.innerWidth<=900); }});
+  $("foot").innerHTML = `
+    <p>Days employed are counted from the hire date in column D up to the date chosen above (today by default). A key certification is flagged once 2 years (730 days) have passed without it. Percentages only count staff employed over 2 years, so newer staff are shown but not counted. Staff flagged for a missing certification stay in the percentage and lower it.</p>
+    <p>Five staff with a different employment status are marked Exempt. They stay in the lookup and the heatmap but are not counted in any total, percentage or flag.</p>
+    <p>This page is a snapshot of the sheet. Staff listed under "Left Service" are not included. SLS 1 and SLS 2 are blank for everyone in the sheet.</p>`;
+  renderAll();
+}
+init();
+</script>
+</body>
+</html>
